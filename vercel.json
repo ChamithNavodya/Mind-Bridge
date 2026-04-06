@@ -1,28 +1,16 @@
 {
-  "builds": [
-    {
-      "src": "Frontend/package.json",
-      "use": "@vercel/next"
-    },
-    {
-      "src": "Backend/api/index.ts",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": [
-          "Backend/prisma/**",
-          "Backend/node_modules/.prisma/client/libquery_engine-*"
-        ]
-      }
-    }
+  "projects": [
+    { "path": "frontend" },
+    { "path": "backend" }
   ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "Backend/api/index.ts"
+  "experimentalServices": {
+    "frontend": {
+      "entrypoint": "frontend",
+      "routePrefix": "/"
     },
-    {
-      "src": "/(.*)",
-      "dest": "Frontend/$1"
+    "backend": {
+      "entrypoint": "backend",
+      "routePrefix": "/api"
     }
-  ]
+  }
 }

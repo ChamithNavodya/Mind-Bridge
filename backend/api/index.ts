@@ -1,41 +1,23 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../src/app.module';
-import { ValidationPipe } from '@nestjs/common';
-import { ExpressAdapter } from '@nestjs/platform-express';
-import express from 'express';
-import morgan from 'morgan';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-const server = express();
+let cachedApp: any = null;
 
-const bootstrap = async (expressInstance: express.Express) => {
-  const app = await NestFactory.create(AppModule, new ExpressAdapter(expressInstance));
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (!cachedApp) {
+    cachedApp = await NestFactory.create(AppModule, { bodyParser: false });
 
-  // Log API
-  app.use(morgan('dev'));
+    cachedApp.enableCors({
+      origin: process.env.CORS_ORIGINS?.split(',') || ['*'],
+      credentials: true,
+    });
 
-  // Enable CORS
-  app.enableCors({
-    origin: true,
-    credentials: true,
-  });
+    await cachedApp.init();
+  }
 
-  // Global validation pipe
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
+  const httpAdapter = cachedApp.getHttpAdapter();
+  const instance = httpAdapter.getInstance();
 
-  // API prefix
-  app.setGlobalPrefix('api');
-
-  await app.init();
-};
-
-bootstrap(server).catch((err) => {
-  console.error('Failed to bootstrap NestJS:', err);
-});
-
-export default server;
+  instance(req, res);
+}
