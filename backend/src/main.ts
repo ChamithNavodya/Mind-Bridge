@@ -11,18 +11,9 @@ export async function loadApplication() {
   const logger = app.get(Logger);
   app.useLogger(logger);
 
-  const configService = app.get(ConfigService);
-  const env = configService.get<string>('NODE_ENV');
-
   app.enableCors();
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Mind Bridge API')
@@ -37,7 +28,7 @@ export async function loadApplication() {
   SwaggerModule.setup('api/docs', app, document);
 
   await app.init();
-  
+
   return { app, logger };
 }
 
